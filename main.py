@@ -1,28 +1,34 @@
 import time, sys, random, os
-#Features to implement!
-#-----------------------------
-#Randomized illness to random characters, one check per turn
-#maybe give the illness like, a 2-5% chance of occuring idk
-#Add medicine to the shop to cure 'Sick' and 'Gravely Injured' status conditions
-
 
 #What would this game be without a 25% chance to die of dysentary?
 
-#Fix me please!
-#------------------
-#Possible bug where town isn't saving properly?
-#Fix scoreboard overwriting names by adding HS Token that calls on external txt and increases the write location by one line each time it's called
+#Features to implement!
+#-----------------------------
+#Add more encounters
 
-#(FIXED)Fix bug where you can sell infinite amount of supplies to shop
+
+#Buglist
+#------------------
+#Fix scoreboard overwriting names
+#Ammo fell off the wagon despite there being no ammo
+
+
+#(FIXED) Fix bug where you can sell infinite amount of supplies to shop
 #(FIXED) Fix shop bug where you can go into infinite debt lol
 #(FIXED) save corruption issue - FIX BY SPLITTING ENTRIES WITH /, NOT \n
 #(FIXED)Fix hard and nightmare modes - FIX BY TWEAKING DIFFICULTY SCALE, USE * TO INCREASE BOTTOM PROBABILITY RATHER THAN DIVIDE TOP PROBABILITY. SAME PROBABILITY EFFECT BUT NO CRASHING FROM RAND() ON FLOAT VALUES FROM DIVISION
 
 #Completed Features
 #-------------------
-#(DONE)Karma system that affects the ending
-#(DONE)Water tablets so you don't die of dysentary
-#(DONE)Add CharacterEvents to the main story func, one check per turn
+#Karma system that affects the ending & how NPC's treat you
+#Water tablets so you don't die of dysentary
+#Add CharacterEvents to the main story func, one check per turn
+#Randomized illness to random characters, one check per turn, 
+#maybe give the illness like, a 2-5% chance of occuring idk
+#Add medicine to the shop to cure 'Sick' and 'Gravely Injured' status conditions
+#Scaled probability of events based on Difficulty variable
+#Starving to death should probably have consequences other than a text warning
+
 
 Karma = 0
 Starving = 'No'
@@ -486,7 +492,7 @@ def Shop():
         MedicineGamble = MedicineGamble1 * Difficulty
         MoneyGamble = MoneyGamble1 * Difficulty
         DiceRoll = random.randint(1,6)
-        if DiceRoll <=2:
+        if DiceRoll ==1:
           for i in range (3):
             CharacterEvents()
           print("\nThe shop owner began shooting immediately, which prompted the local sherriff to bolt over. \n\nWe took heavy fire and had to leave a party member behind.")
@@ -494,7 +500,7 @@ def Shop():
           Die()
           time.sleep(2)
           save()
-        elif DiceRoll >=3:
+        elif DiceRoll >=2:
           print("\nSuccess!")
           time.sleep(2) 
           print("\nWe got",FoodGamble,"X Food,",AmmoGamble,"X Ammo, $",MoneyGamble,"and",MedicineGamble,"X Medicine!")
@@ -519,21 +525,33 @@ def MedFunc():
   global Character_4
   global Medicine
   if Char1Health == 'Gravely Injured' or Char1Health == 'Sick':
-    UseMeds = input("\nWould you like to use medicine to cure",Character_1,"?\n(Y/N): ")
+    print("\nWould you like to use medicine to cure",Character_1,"?")
+    print("\nX",Medicine,"Medicine")
+    UseMeds = input("\n(Y/N): ")
     if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
       print("\n",Character_1,"has recovered and is healthy again.")
+      Char1Health = 'Healthy'
   if Char2Health == 'Gravely Injured' or Char2Health == 'Sick':
-    UseMeds = input("\nWould you like to use medicine to cure",Character_2,"?\n(Y/N): ")
+    print("\nWould you like to use medicine to cure",Character_2,"?")
+    print("\nX",Medicine,"Medicine")
+    UseMeds = input("\n(Y/N): ")
     if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
       print("\n",Character_2,"has recovered and is healthy again.")
+      Char2Health = 'Healthy'
   if Char3Health == 'Gravely Injured' or Char3Health == 'Sick':
-    UseMeds = input("\nWould you like to use medicine to cure",Character_3,"?\n(Y/N): ")
+    print("\nWould you like to use medicine to cure",Character_3,"?")
+    print("\nX",Medicine,"Medicine")
+    UseMeds = input("\n(Y/N): ")
     if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
       print("\n",Character_3,"has recovered and is healthy again.")
+      Char3Health = 'Healthy'
   if Char4Health == 'Gravely Injured' or Char4Health == 'Sick':
-    UseMeds = input("\nWould you like to use medicine to cure",Character_4,"?\n(Y/N): ")
+    print("\nWould you like to use medicine to cure",Character_4,"?")
+    print("\nX",Medicine,"Medicine")
+    UseMeds = input("\n(Y/N): ")
     if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
       print("\n",Character_4,"has recovered and is healthy again.")
+      Char4Health = 'Healthy'
 
 def CharacterEvents():
   global Difficulty
@@ -643,10 +661,13 @@ def AreWeTHATDesperate():
     DesperateToken = DesperateToken + 1
     if DesperateToken == 5:
       if Karma >=-5:
+        print("\n",Food,"X Food\n",Ammo,"X Ammo")
         print("| Our supplies are running dangerously low, and we might not make it to the next town.\nHowever, we noticed a few other wagons on the trail...\nWe could really use those supplies. I mean REALLY use those supplies, right? Right??")
       elif Karma < -5 and Karma >= -7:
+        print("\n",Food,"X Food\n",Ammo,"X Ammo")
         print("| Our supplies are running low, and we see a few wagons with minimal security travelling. We could use those supplies more, right? ")
       elif Karma < -7:
+        print("\n",Food,"X Food\n",Ammo,"X Ammo")
         print("| Our supplies have run out once again, and all these other wagons have plenty.\nShall we?")
       Choice = input("\nY/N: ")
       DesperateToken = 0
@@ -709,6 +730,12 @@ def LocationFunc():
     Location = "Home Stretch"
   Town = Town + 1
 
+def SickCheck():
+  global Difficulty
+  Default_Probability = 100/Difficulty
+  Probability = random.randint(1,Default_Probability)
+  if Probability == 1:
+    Sick()
 
 def Story():
     global Location
@@ -724,6 +751,8 @@ def Story():
         DoWeNeedFood()
         TokenCheck()
         AreWeTHATDesperate()
+        SickCheck()
+        MedFunc()
     sys.stdout.write("X")
     LocationFunc()
     print("\nYou have arrived at",Location,"and elect to stop by the store for supplies.")
