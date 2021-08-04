@@ -5,18 +5,20 @@ import time, sys, random, os
 #Features to implement!
 #-----------------------------
 #Add more encounters
+#Wagon wheels are just chilling right now, maybe if one broke on the trail..
 
 
 #Buglist
 #------------------
 #Fix scoreboard overwriting names
 #Ammo fell off the wagon despite there being no ammo
+#Selling items in the shop leads to accidentally selling multiple times through recursion upon shop exit. Add some kind of safety?
 
 
-#(FIXED) Fix bug where you can sell infinite amount of supplies to shop
-#(FIXED) Fix shop bug where you can go into infinite debt lol
-#(FIXED) save corruption issue - FIX BY SPLITTING ENTRIES WITH /, NOT \n
-#(FIXED)Fix hard and nightmare modes - FIX BY TWEAKING DIFFICULTY SCALE, USE * TO INCREASE BOTTOM PROBABILITY RATHER THAN DIVIDE TOP PROBABILITY. SAME PROBABILITY EFFECT BUT NO CRASHING FROM RAND() ON FLOAT VALUES FROM DIVISION
+#(FIXED) Bug where you can sell infinite amount of supplies to shop
+#(FIXED) Shop bug where you can go into infinite debt lol
+#(FIXED) Save corruption issue - FIX BY SPLITTING ENTRIES WITH /, NOT \n
+#(FIXED) Hard and Nightmare modes - FIX BY TWEAKING DIFFICULTY SCALE, USE * TO INCREASE BOTTOM PROBABILITY RATHER THAN DIVIDE TOP PROBABILITY. SAME PROBABILITY EFFECT BUT NO CRASHING FROM RAND() ON FLOAT VALUES FROM DIVISION
 
 #Completed Features
 #-------------------
@@ -28,6 +30,7 @@ import time, sys, random, os
 #Add medicine to the shop to cure 'Sick' and 'Gravely Injured' status conditions
 #Scaled probability of events based on Difficulty variable
 #Starving to death should probably have consequences other than a text warning
+#Inflated prices based on trader's remoteness. Increases difficulty in mid-late game.
 
 
 Karma = 0
@@ -39,6 +42,7 @@ Ammo = 0
 Miles = 10
 Town = 0
 Medicine = 0
+Wheels = 0
 Location = ''
 PlayerName = ''
 Character_1 = ""
@@ -214,6 +218,7 @@ def TroubleCheck():
               Ammo = 0
 
 def DoWeNeedFood():
+  try:
     global Food
     global Ammo
     global Starving
@@ -233,6 +238,9 @@ def DoWeNeedFood():
             Hunt()
         if Choice == 'N' or Choice == 'n':
           print("\nWe elected not to hunt, and continued on our way.")
+  except:
+    print("\nInvalid input, try again")
+    DoWeNeedFood()
 
 def HiddenShop():
   global Char1Health
@@ -307,7 +315,38 @@ def KarmaStatus():
     Reputation = "Wanted - Dead or Alive"
     ShopMessage = "\nYou need to leave. Now.\n\n"
 
+def RemoteFunc():
+  global Remoteness
+  global Town
+  if Town == 1:
+    #Hanover
+    Remoteness = 1
+  if Town == 2:
+    #Sawk trail remote
+    Remoteness = 1.5
+  if Town == 3:
+    #Nashville
+    Remoteness = 1
+  if Town == 4:
+    #Nebraska
+    Remoteness = 1.2
+  if Town == 5:
+    #Denver remote
+    Remoteness = 2
+  if Town == 6:
+    #Wyoming
+    Remoteness = 1.2
+  if Town == 7:
+    #Idaho Remote
+    Remoteness = 3
+  if Town == 8:
+    #Oregon
+    Remoteness = 1
+  if Town == 9:
+    Remoteness = 0
+
 def Shop():
+  try:
     global Money
     global Food
     global Ammo
@@ -315,7 +354,15 @@ def Shop():
     global Water_Tablets
     global Reputation
     global Medicine
+    global Wheels
+    global Remoteness
     KarmaStatus()
+    RemoteFunc()
+    WheelPrice = Remoteness * 100
+    FoodPrice = Remoteness * 1
+    TabPrice = Remoteness * 100
+    MedPrice = Remoteness * 50
+    AmmoPrice = Remoteness * 5
     if Water_Tablets == "Yes":
       WeBoughtThemAlready = "(Purchased)"
     elif Water_Tablets == "No":
@@ -338,63 +385,64 @@ def Shop():
     elif Karma < -3 and Karma >=-6:
       print("\nWelcome to the",Location,"shop.\nOh god, it's you.\nI need you to leave before you scare my customers away.\nShoo.\n")
     elif Karma <-6 and Karma >=-9:
-      print("\nI don't serve your kind here. Get out.\n\n")
+      print("\nI don't serve your kind here.\n\n")
     elif Karma <=-10:
       print("\nYou need to leave. Now.\n\n")
     if Karma >-6:
-      print("\n\nPlayer money: $",Money,"\n1. Small food supply (5) - $100 (Current supply:",Food,")\n\n2. Large food supply (30) - $300\n\n3. Ammo - $5 (Current supply:",Ammo,")\n\n4. Water Purification Tablets - $100",WeBoughtThemAlready,"\n\n5. Medicine - $50 (Current supply:",Medicine,")\n\n6. Exit Shop")
+      print("\n\nPlayer money: $",Money,"\n1. Wagon Wheel - $",WheelPrice," (Current supply:",Wheels,")\n\n2. Food Supply - $",FoodPrice," per Ib (Current Ibs:",Food,")\n\n3. Ammo - $",AmmoPrice," (Current supply:",Ammo,")\n\n4. Water Purification Tablets - $",TabPrice,WeBoughtThemAlready,"\n\n5. Medicine - $",MedPrice," (Current supply:",Medicine,")\n\n6. Exit Shop")
       ShopSelect = int(input("\n\nEnter selection: "))
       if ShopSelect == 1:
-          Amount = int(input("\nHow many would you like to buy?: "))
-          if Amount < 0:
-            Food = Food + 5 * Amount
-            if Food < 0:
-              print("\nNot enough food to sell.")
-              time.sleep(1)
-              Food = Food + 5 * abs(Amount)
-              clear()
-              Shop()
-            else:
-              Price = 100 * abs(Amount)
-              print("\nSold",abs(Amount),"X Small food supply for $",Price)
-              time.sleep(1)
-              Money = Money + Price
-              clear()
-              Shop()
-          Money = Money - 100 *Amount
-          if Money < 0:
-            print("\nNot enough money..")
-            Money = Money + 100 * Amount
-          else:
-            Food = Food + 5 * Amount
-            print("\n\n",Amount,"X Small food supply purchased!\n\n")
-          time.sleep(1)
-          clear()
-          Shop()
-      elif ShopSelect == 2:
         Amount = int(input("\nHow many would you like to buy?: "))
         if Amount < 0:
-          Food = Food + 30 * Amount
-          if Food < 0:
-            print("\nNot enough food to sell.")
+          Wheels = Wheels + 1 * Amount
+          if Wheels < 0:
+            print("\nNot enough wheels to sell.")
             time.sleep(1)
-            Food = Food + 30 * abs(Amount)
+            Wheels = Wheels + 1 * abs(Amount)
             clear()
             Shop()
           else:
-            Price = 300 * abs(Amount)
-            print("\nSold",abs(Amount),"X Large food supply for $",Price)
+            Price = WheelPrice * abs(Amount)
+            print("\nSold",abs(Amount),"X Wheel for $",Price)
             time.sleep(1)
             Money = Money + Price
             clear()
             Shop()
-        Money = Money - 300 * Amount
+        Money = Money - WheelPrice *Amount
         if Money < 0:
-          Money = Money + 300 * Amount
+          print("\nNot enough money..")
+          time.sleep(1)
+          Money = Money + WheelPrice * Amount
+        else:
+          Wheels = Wheels + 1 * Amount
+          print("\n\n",Amount,"X Wheel purchased!\n\n")
+        time.sleep(1)
+        clear()
+        Shop()
+      elif ShopSelect == 2:
+        Amount = int(input("\nHow many would you like to buy?: "))
+        if Amount < 0:
+          Food = Food + 1 * Amount
+          if Food < 0:
+            print("\nNot enough food to sell.")
+            time.sleep(1)
+            Food = Food + 1 * abs(Amount)
+            clear()
+            Shop()
+          else:
+            Price = FoodPrice * abs(Amount)
+            print("\nSold",abs(Amount),"X Ibs of Food $",Price)
+            time.sleep(1)
+            Money = Money + Price
+            clear()
+            Shop()
+        Money = Money - FoodPrice * Amount
+        if Money < 0:
+          Money = Money + FoodPrice * Amount
           print("\nNot enough money..")
         else:
-          Food = Food + 30 * Amount
-          print("\n\n",Amount,"X Large food supply purchased!\n\n")
+          Food = Food + 1 * Amount
+          print("\n\n",Amount,"X Ibs of food supply purchased!\n\n")
         time.sleep(1)
         clear()
         Shop()
@@ -409,15 +457,15 @@ def Shop():
             clear()
             Shop()
           else:
-            Price = 5 * abs(Amount)
+            Price = AmmoPrice * abs(Amount)
             print("\nSold",abs(Amount),"X Ammo for $",Price)
             Money = Money + Price
             time.sleep(1)
             clear()
             Shop()
-        Money = Money - 5 * Amount
+        Money = Money - AmmoPrice * Amount
         if Money < 0:
-          Money = Money + 5*Amount
+          Money = Money + AmmoPrice*Amount
           print("\nNot enough money")
         else:
           Ammo = Ammo + 1 * Amount
@@ -427,9 +475,9 @@ def Shop():
         Shop()
       elif ShopSelect == 4:
         time.sleep(1)
-        Money = Money - 100
+        Money = Money - TabPrice
         if Money < 0:
-          Money = Money + 100
+          Money = Money + TabPrice
           print("Not enough money..")
         else:
           Water_Tablets = "Yes"
@@ -447,15 +495,15 @@ def Shop():
             clear()
             Shop()
           else:
-            Price = 50 * abs(Amount)
+            Price = MedPrice * abs(Amount)
             print("\nSold",abs(Amount),"X Medicine for $",Price)
             time.sleep(1)
             Money = Money + Price
             clear()
             Shop()
-        Money = Money - 50 * Amount
+        Money = Money - MedPrice * Amount
         if Money < 0:
-          Money = Money + 50 * Amount
+          Money = Money + MedPrice * Amount
           print("\nNot enough money..")
         else:
           Medicine = Medicine + 1 * Amount
@@ -468,6 +516,7 @@ def Shop():
         clear()
         Shop()
       elif ShopSelect == 6:
+        Amount = 0
         clear()
         save()
       elif ShopSelect == 7:
@@ -509,49 +558,59 @@ def Shop():
           Money = Money + MoneyGamble
           time.sleep(6)
           save()
+      elif ShopSelect == 3:
+        clear()
+        HiddenShop()
       else:
         print("Try again")
         clear()
         Shop()
+  except:
+    print("invalid input, try again")
+    Shop()
 
 def MedFunc():
-  global Char1Health
-  global Char2Health
-  global Char3Health
-  global Char4Health
-  global Character_1
-  global Character_2
-  global Character_3
-  global Character_4
-  global Medicine
-  if Char1Health == 'Gravely Injured' or Char1Health == 'Sick':
-    print("\nWould you like to use medicine to cure",Character_1,"?")
-    print("\nX",Medicine,"Medicine")
-    UseMeds = input("\n(Y/N): ")
-    if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
-      print("\n",Character_1,"has recovered and is healthy again.")
-      Char1Health = 'Healthy'
-  if Char2Health == 'Gravely Injured' or Char2Health == 'Sick':
-    print("\nWould you like to use medicine to cure",Character_2,"?")
-    print("\nX",Medicine,"Medicine")
-    UseMeds = input("\n(Y/N): ")
-    if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
-      print("\n",Character_2,"has recovered and is healthy again.")
-      Char2Health = 'Healthy'
-  if Char3Health == 'Gravely Injured' or Char3Health == 'Sick':
-    print("\nWould you like to use medicine to cure",Character_3,"?")
-    print("\nX",Medicine,"Medicine")
-    UseMeds = input("\n(Y/N): ")
-    if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
-      print("\n",Character_3,"has recovered and is healthy again.")
-      Char3Health = 'Healthy'
-  if Char4Health == 'Gravely Injured' or Char4Health == 'Sick':
-    print("\nWould you like to use medicine to cure",Character_4,"?")
-    print("\nX",Medicine,"Medicine")
-    UseMeds = input("\n(Y/N): ")
-    if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
-      print("\n",Character_4,"has recovered and is healthy again.")
-      Char4Health = 'Healthy'
+  try:
+    global Char1Health
+    global Char2Health
+    global Char3Health
+    global Char4Health
+    global Character_1
+    global Character_2
+    global Character_3
+    global Character_4
+    global Medicine
+    if Char1Health == 'Gravely Injured' or Char1Health == 'Sick':
+      print("\nWould you like to use medicine to cure",Character_1,"?")
+      print("\nX",Medicine,"Medicine")
+      UseMeds = input("\n(Y/N): ")
+      if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
+        print("\n",Character_1,"has recovered and is healthy again.")
+        Char1Health = 'Healthy'
+    if Char2Health == 'Gravely Injured' or Char2Health == 'Sick':
+      print("\nWould you like to use medicine to cure",Character_2,"?")
+      print("\nX",Medicine,"Medicine")
+      UseMeds = input("\n(Y/N): ")
+      if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
+        print("\n",Character_2,"has recovered and is healthy again.")
+        Char2Health = 'Healthy'
+    if Char3Health == 'Gravely Injured' or Char3Health == 'Sick':
+      print("\nWould you like to use medicine to cure",Character_3,"?")
+      print("\nX",Medicine,"Medicine")
+      UseMeds = input("\n(Y/N): ")
+      if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
+        print("\n",Character_3,"has recovered and is healthy again.")
+        Char3Health = 'Healthy'
+    if Char4Health == 'Gravely Injured' or Char4Health == 'Sick':
+      print("\nWould you like to use medicine to cure",Character_4,"?")
+      print("\nX",Medicine,"Medicine")
+      UseMeds = input("\n(Y/N): ")
+      if UseMeds == "Y" or UseMeds == "y" and Medicine >=1:
+        print("\n",Character_4,"has recovered and is healthy again.")
+        Char4Health = 'Healthy'
+  except:
+    print("invalid input, try again")
+    MedFunc()
 
 def CharacterEvents():
   global Difficulty
@@ -652,60 +711,64 @@ def CharacterEvents():
     time.sleep(3)
 
 def AreWeTHATDesperate():
-  global Ammo
-  global Food
-  global Money
-  global Karma
-  global DesperateToken
-  if Food < 30 and Ammo < 20:
-    DesperateToken = DesperateToken + 1
-    if DesperateToken == 5:
-      if Karma >=-5:
-        print("\n",Food,"X Food\n",Ammo,"X Ammo")
-        print("| Our supplies are running dangerously low, and we might not make it to the next town.\nHowever, we noticed a few other wagons on the trail...\nWe could really use those supplies. I mean REALLY use those supplies, right? Right??")
-      elif Karma < -5 and Karma >= -7:
-        print("\n",Food,"X Food\n",Ammo,"X Ammo")
-        print("| Our supplies are running low, and we see a few wagons with minimal security travelling. We could use those supplies more, right? ")
-      elif Karma < -7:
-        print("\n",Food,"X Food\n",Ammo,"X Ammo")
-        print("| Our supplies have run out once again, and all these other wagons have plenty.\nShall we?")
-      Choice = input("\nY/N: ")
-      DesperateToken = 0
-      if Choice == "Y" or Choice == "y":
-        DiceRoll = random.randint(1,6)
-        FoodGained = 20*DiceRoll
-        AmmoGained = 10*DiceRoll
-        if DiceRoll ==2:
-          for i in range(5):
-            CharacterEvents()
-          print("\nThey started shooting back immediately, and we sustained several injuries and one casualty. However, in their haste to escape us, they dropped some supplies to lighten their wagon.")
-          time.sleep(1)
-          Food = Food + 50
-          Ammo = Ammo + 40
-        elif DiceRoll ==1:
-          Die()
-          print("\nThey shot back immediately and killed one of us before dissapearing in the mountains. We must push on without supplies, and minus a party member.")
-        elif DiceRoll >2:
-          if Karma >=-5:
-            print("\nWe got the supplies, but we feel terrible. Let's never talk about it again.")
-            FoodGained = 50 * Difficulty
-            AmmoGained = 30 * Difficulty
-            MoneyGained = 50 * Difficulty
-            Food = Food + FoodGained
-            Ammo = Ammo + AmmoGained
-            Money = Money + MoneyGained
-            print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
-            Karma = Karma - 1
-          else:
-            print("\nWe obtained their supplies and continued on our adventure.")
-            FoodGained = 50 * Difficulty
-            AmmoGained = 50 * Difficulty
-            MoneyGained = 100 * Difficulty
-            print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
-            Food = Food + FoodGained
-            Ammo = Ammo + AmmoGained
-            Money = Money + MoneyGained
-            Karma = Karma -1
+  try:
+    global Ammo
+    global Food
+    global Money
+    global Karma
+    global DesperateToken
+    if Food < 30 and Ammo < 20:
+      DesperateToken = DesperateToken + 1
+      if DesperateToken == 5:
+        if Karma >=-5:
+          print("\n",Food,"X Food\n",Ammo,"X Ammo")
+          print("| Our supplies are running dangerously low, and we might not make it to the next town.\nHowever, we noticed a few other wagons on the trail...\nWe could really use those supplies. I mean REALLY use those supplies, right? Right??")
+        elif Karma < -5 and Karma >= -7:
+          print("\n",Food,"X Food\n",Ammo,"X Ammo")
+          print("| Our supplies are running low, and we see a few wagons with minimal security travelling. We could use those supplies more, right? ")
+        elif Karma < -7:
+          print("\n",Food,"X Food\n",Ammo,"X Ammo")
+          print("| Our supplies have run out once again, and all these other wagons have plenty.\nShall we?")
+        Choice = input("\nY/N: ")
+        DesperateToken = 0
+        if Choice == "Y" or Choice == "y":
+          DiceRoll = random.randint(1,6)
+          FoodGained = 20*DiceRoll
+          AmmoGained = 10*DiceRoll
+          if DiceRoll ==2:
+            for i in range(5):
+              CharacterEvents()
+            print("\nThey started shooting back immediately, and we sustained several injuries and one casualty. However, in their haste to escape us, they dropped some supplies to lighten their wagon.")
+            time.sleep(1)
+            Food = Food + 50
+            Ammo = Ammo + 40
+          elif DiceRoll ==1:
+            Die()
+            print("\nThey shot back immediately and killed one of us before dissapearing in the mountains. We must push on without supplies, and minus a party member.")
+          elif DiceRoll >2:
+            if Karma >=-5:
+              print("\nWe got the supplies, but we feel terrible. Let's never talk about it again.")
+              FoodGained = 50 * Difficulty
+              AmmoGained = 30 * Difficulty
+              MoneyGained = 50 * Difficulty
+              Food = Food + FoodGained
+              Ammo = Ammo + AmmoGained
+              Money = Money + MoneyGained
+              print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
+              Karma = Karma - 1
+            else:
+              print("\nWe obtained their supplies and continued on our adventure.")
+              FoodGained = 50 * Difficulty
+              AmmoGained = 50 * Difficulty
+              MoneyGained = 100 * Difficulty
+              print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
+              Food = Food + FoodGained
+              Ammo = Ammo + AmmoGained
+              Money = Money + MoneyGained
+              Karma = Karma -1
+  except:
+    print("invalid input")
+    AreWeTHATDesperate()
 
 def LocationFunc():
   global Location
@@ -713,17 +776,17 @@ def LocationFunc():
   if Town == 0:
     Location = "Hanover"
   if Town == 1:
-    Location = "Sawk Trail Trading Post"
+    Location = "Sawk Trail Remote Trading Post"
   if Town == 2:
     Location = "Nashville"
   if Town == 3:
     Location = "Nebraska State Trading Post"
   if Town == 4:
-    Location = "Denver Trading Post"
+    Location = "Denver Remote Trading Post"
   if Town == 5:
-    Location = "Wyoming Remote Trader"
+    Location = "Wyoming Trader"
   if Town == 6:
-    Location = "Idaho State Trading Post"
+    Location = "Idaho Remote Trading Post"
   if Town == 7:
     Location = "Oregon State Traders"
   if Town == 8:
@@ -740,7 +803,7 @@ def SickCheck():
 def Story():
     global Location
     global Miles
-    print("\nYou embark from",Location,"for your next waypoint about",Miles,"miles west...")
+    print("\nYou embark from",Location,"for your next waypoint about",Miles,"days west...")
     print("X")
     for i in range(Miles):
         time.sleep(.8)
@@ -753,7 +816,7 @@ def Story():
         AreWeTHATDesperate()
         SickCheck()
         MedFunc()
-    sys.stdout.write("X")
+    print("X")
     LocationFunc()
     print("\nYou have arrived at",Location,"and elect to stop by the store for supplies.")
     time.sleep(3)
@@ -838,134 +901,170 @@ def Sick():
           print("\n|",Character_4,"contracted a second illness, causing severe complications.\n",Character_4,"has died.")
           Char4Health = 'Dead'
 
-def StoryEvents():
-  global Difficulty
+def Ford():
+  global Food
+  try:
+    print("| You come to a river, will you attempt to ford (Risky) or go around the river? (+ Several Days Travel)")
+    FordRiver = input("\n(Ford/Around): ")
+    if FordRiver == "Ford" or FordRiver == "ford":
+      DiceRoll = random.randint(1,6)
+      if DiceRoll >=3:
+        CharacterEvents()
+        print("\nSuccessfully forded the river and continued on our journey.")
+      if DiceRoll <3:
+        for i in range(5):
+          CharacterEvents()
+        print("\nThe ford was rough, but we got by with a lot of scrapes and bruises.")
+    if FordRiver == "Around" or FordRiver == "around":
+      print("\nWe added a few days to our journey, but we made it around.")
+      Food = Food - 30
+  except:
+    print("Invalid input, try again")
+    FordRiver = "Around"
+    Ford()
+
+def Bandit():
+  global Karma
+  global Food
+  global Money
+  global Ammo
+  try:
+    if Karma > -5:
+      print("\n| We're under attack by bandits! Will we fight back (Risky) or try to lose them? (+ Several Days Travel) ")
+      if Ammo <0:
+        Ammo = 0
+      print("\n",Ammo,"X Ammo\n",Food,"X Food\n")
+      Attack = input("\n(Fight/Run): ")
+      if Attack == "Fight" or Attack == "fight":
+        DiceRoll = random.randint(1,6)
+        if DiceRoll >=3:
+          CharacterEvents()
+          Ammo = Ammo - 10
+          print("\nSuccessfully fought off the bandits.. but..")
+          print("\n",Ammo,"X Ammo\n",Food,"X Food\n")
+          Looty = input("\nShould we loot the bodies..?\n\n(Y/N): ")
+          if Looty == "y" or Looty == "Y":
+            InfectionRoll = random.randint(1,6)
+            if Food <=60:
+              print("\nWe really needed the supplies, so we don't feel too bad about it.")
+              FoodLoot = 10*DiceRoll 
+              MoneyLoot = 100*DiceRoll
+              Food = Food + FoodLoot
+              Money = Money + MoneyLoot
+              print("\nLooted $",MoneyLoot,"and",FoodLoot,"food.")
+            else:
+              print("\nWe didn't really need them, but extra supplies are always welcome.")
+              FoodLoot = 10*DiceRoll 
+              MoneyLoot = 100*DiceRoll
+              Food = Food + FoodLoot
+              Money = Money + MoneyLoot
+              print("\nLooted $",MoneyLoot,"and",FoodLoot,"food.")
+              Karma = Karma - 1
+            if InfectionRoll == 1:
+              print("\nWe think one of those bandits had a nasty skin disease\nIt's starting to cover our skin..")
+              Sick()
+        if DiceRoll <3:
+          for i in range(5):
+            CharacterEvents()
+          print("\nWe lost one of our party members to a stray bullet and suffered several injuries.")
+          Die()
+      if Attack == "Run" or Attack == "run":
+        for i in range(5):
+          CharacterEvents()
+        print("\nThey hit a couple of us, but nothing life threatening. We lost some food though.")
+        Food = Food - 20
+    if Karma < -5:
+      print("\n| Some bandits spotted us, recognized our wagon, and turned around instantly.")
+      time.sleep(1)
+      if Karma < -7:
+        print("\nShould we chase after them?")
+        choice = input("\nY/N: ")
+        if choice == "Y" or choice == "y":
+          FoodGained = 200 * Difficulty
+          AmmoGained = 150 * Difficulty
+          MoneyGained = 300 * Difficulty
+          print("\nWe followed them back to their camp, which ended up being ripe pickings.")
+          print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
+          Food = Food + FoodGained
+          Ammo = Ammo + AmmoGained
+          Money = Money + MoneyGained
+  except:
+    print("invalid input, try again")
+    Bandit()
+
+def BadWater():
+  global Water_Tablets
+  if Water_Tablets == "Yes":
+    print("| The water looks suspicious, it's a good thing we picked up water tablets.")
+  elif Water_Tablets == "No":
+    print("| You have died of Dysentary.")
+    Die()
+
+def StuckWagon():
   global Food
   global Ammo
-  global Money
   global Karma
-  global Water_Tablets
+  global Wheels
+  global Food
+  global Money
+  try:
+    print("| A wagon stuck on the side of the road flags you down as you pass,\n begging for food and any supplies you can spare.\n What would we be willing to part with?")
+    time.sleep(2)
+    print("\n",Ammo,"X Ammo\n",Food,"X Food\n")
+    Charity = int(input("\n1. 20 Ammo\n2. 30 Food\n3. Rob Them\n4. Nothing\n: "))
+    if Charity == 1:
+      if Ammo > 50:
+        print("\nWe had a surplus of ammo anyways, and they were instantly overjoyed\n to be able to hunt food. We walked away feeling good about ourselves.")
+        Karma = Karma + 1
+      if Ammo <=50:
+        print("\nWe don't have much ammo left, but we handed them a few handfuls.\n We'd never seen anybody so grateful in our lives.")
+        Karma = Karma + 2
+      Ammo = Ammo - 50
+    elif Charity == 2:
+      if Food > 60:
+        print("\nWe had a lot of food to spare anyways, so we didn't mind sharing.\n They must have been starving, because they started eating immediately.\nThey gave us some money for our troubles.\n+$200")
+        Money = Money + 200
+        Karma = Karma + 1
+      if Food <= 60:
+        print("\nDespite having little food ourselves, we opted to share. \nWe'd never seen a bunch more grateful.\nThey gave us some money for our troubles.\n+$300")
+        Money = Money + 300
+      Food = Food - 30
+    elif Charity == 3:
+      print("\nThey didn't have much food or ammo, but they had medicine.")
+      Food = Food + 20
+      Ammo = Ammo + 10
+      if Karma >=0:
+        print("\nWe feel terrible about what we did. \nDid we really need the supplies that bad?")
+        Karma = Karma - 2
+      else:
+        print("\nThey were doomed to begin with, we could use those supplies more.\n\nWe also took a few of the wheels from their wagon.")
+        Karma = Karma - 3
+        Wheels = Wheels + 2
+    elif Charity == 4:
+      if Ammo >=50:
+        print("\nWe're not a charity, so we drove right past them. \nOur supplies are ours.")
+        Karma = Karma - 3
+      if Ammo <50:
+        print("\nWe barely have any supplies left as is. \nWe want to help, but we would die before we make it to the next town.")
+  except:
+    print("invalid input, try again")
+    StuckWagon()
+
+def StoryEvents():
+  global Difficulty
   Default_Probability = 100 / Difficulty
   round(Default_Probability)
   EventProbability = random.randint(1,Default_Probability)
   Event = random.randint(1,4)
   if EventProbability <5:
     if Event == 1:
-      print("| You come to a river, will you attempt to ford (Risky) or go around the river? (+ Several Days Travel)")
-      FordRiver = input("\n(Ford/Around): ")
-      if FordRiver == "Ford" or FordRiver == "ford":
-        DiceRoll = random.randint(1,6)
-        if DiceRoll >=3:
-          CharacterEvents()
-          print("\nSuccessfully forded the river and continued on our journey.")
-        if DiceRoll <3:
-          for i in range(5):
-            CharacterEvents()
-          print("\nThe ford was rough, but we got by with a lot of scrapes and bruises.")
-      if FordRiver == "Around" or FordRiver == "around":
-        print("\nWe added a few days to our journey, but we made it around.")
-        Food = Food - 30
+      Ford()
     elif Event == 2:
-      if Karma > -5:
-        print("\n| We're under attack by bandits! Will we fight back (Risky) or try to lose them? (+ Several Days Travel) ")
-        Attack = input("\n(Fight/Run): ")
-        if Attack == "Fight" or Attack == "fight":
-          DiceRoll = random.randint(1,6)
-          if DiceRoll >=3:
-            CharacterEvents()
-            Ammo = Ammo - 10
-            print("\nSuccessfully fought off the bandits.. but..")
-            print("\n",Ammo,"X Ammo\n",Food,"X Food\n")
-            Looty = input("\nShould we loot the bodies..?\n\n(Y/N): ")
-            if Looty == "y" or Looty == "Y":
-              InfectionRoll = random.randint(1,6)
-              if Food <=60:
-                print("\nWe really needed the supplies, so we don't feel too bad about it.")
-                FoodLoot = 10*DiceRoll 
-                MoneyLoot = 100*DiceRoll
-                Food = Food + FoodLoot
-                Money = Money + MoneyLoot
-                print("\nLooted $",MoneyLoot,"and",FoodLoot,"food.")
-              else:
-                print("\nWe didn't really need them, but extra supplies are always welcome.")
-                FoodLoot = 10*DiceRoll 
-                MoneyLoot = 100*DiceRoll
-                Food = Food + FoodLoot
-                Money = Money + MoneyLoot
-                print("\nLooted $",MoneyLoot,"and",FoodLoot,"food.")
-                Karma = Karma - 1
-              if InfectionRoll == 1:
-                print("\nWe think one of those bandits had a nasty skin disease\nIt's starting to cover our skin..")
-                Sick()
-          if DiceRoll <3:
-            for i in range(5):
-              CharacterEvents()
-            print("\nWe lost one of our party members to a stray bullet and suffered several injuries.")
-            Die()
-        if Attack == "Run" or Attack == "run":
-          for i in range(5):
-            CharacterEvents()
-          print("\nThey hit a couple of us, but nothing life threatening. We lost some food though.")
-          Food = Food - 20
-      if Karma < -5:
-        print("\n| Some bandits spotted us, recognized our wagon, and turned around instantly.")
-        time.sleep(1)
-        if Karma < -7:
-          print("\nShould we chase after them?")
-          choice = input("\nY/N: ")
-          if choice == "Y" or choice == "y":
-            FoodGained = 200 * Difficulty
-            AmmoGained = 150 * Difficulty
-            MoneyGained = 300 * Difficulty
-            print("\nWe followed them back to their camp, which ended up being ripe pickings.")
-            print("\nLooted $",MoneyGained,", X",AmmoGained,"Ammo, and",FoodGained,"food.")
-            Food = Food + FoodGained
-            Ammo = Ammo + AmmoGained
-            Money = Money + MoneyGained
+      Bandit()
     elif Event == 3:
-      if Water_Tablets == "Yes":
-        print("| The water looks suspicious, it's a good thing we picked up water tablets.")
-      elif Water_Tablets == "No":
-        print("| You have died of Dysentary.")
-        Die()
+      BadWater()
     elif Event == 4:
-      print("| A wagon stuck on the side of the road flags you down as you pass,\n begging for food and any supplies you can spare.\n What would we be willing to part with?")
-      time.sleep(2)
-      print("\n",Ammo,"X Ammo\n",Food,"X Food\n")
-      Charity = int(input("\n1. 20 Ammo\n2. 30 Food\n3. Rob Them\n4. Nothing\n: "))
-      if Charity == 1:
-        if Ammo > 50:
-          print("\nWe had a surplus of ammo anyways, and they were instantly overjoyed\n to be able to hunt food. We walked away feeling good about ourselves.")
-          Karma = Karma + 1
-        if Ammo <=50:
-          print("\nWe don't have much ammo left, but we handed them a few handfuls.\n We'd never seen anybody so grateful in our lives.")
-          Karma = Karma + 2
-        Ammo = Ammo - 50
-      elif Charity == 2:
-        if Food > 60:
-          print("\nWe had a lot of food to spare anyways, so we didn't mind sharing.\n They must have been starving, because they started eating immediately.\nThey gave us some money for our troubles.\n+$200")
-          Money = Money + 200
-          Karma = Karma + 1
-        if Food <= 60:
-          print("\nDespite having little food ourselves, we opted to share. \nWe'd never seen a bunch more grateful.\nThey gave us some money for our troubles.\n+$300")
-          Money = Money + 300
-        Food = Food - 30
-      elif Charity == 3:
-        print("\nThey didn't have much food or ammo, but they had medicine.")
-        Food = Food + 20
-        Ammo = Ammo + 10
-        if Karma >=0:
-          print("\nWe feel terrible about what we did. \nDid we really need the supplies that bad?")
-          Karma = Karma - 2
-        else:
-          print("\nThey were doomed to begin with, we could use those supplies more.")
-          Karma = Karma - 3
-      elif Charity == 4:
-        if Ammo >=50:
-          print("\nWe're not a charity, so we drove right past them. \nOur supplies are ours.")
-          Karma = Karma - 3
-        if Ammo <50:
-          print("\nWe barely have any supplies left as is. \nWe want to help, but we would die before we make it to the next town.")
+      StuckWagon()
     elif Event == 5:
       test = 5
     
@@ -1036,6 +1135,7 @@ def save():
   global Location
   global Water_Tablets
   global Medicine
+  global Wheels
   Save = input("\n\nDo you want to save your progress? \nY/N:")
   if Save == 'Y' or Save == 'y':
     file = open(PlayerName + "save.txt", "w")
@@ -1046,6 +1146,7 @@ def save():
     DifficultySTR = Difficulty
     KarmaSTR = Karma
     MedSTR = Medicine
+    WheelSTR = Wheels
     MoneySTR = repr(MoneySTR)
     FoodSTR = repr(FoodSTR)
     AmmoSTR = repr(AmmoSTR)
@@ -1053,7 +1154,8 @@ def save():
     DifficultySTR = repr(DifficultySTR)
     KarmaSTR = repr(KarmaSTR)
     MedSTR = repr(MedSTR)
-    file.write(MoneySTR+"/"+FoodSTR+"/" +AmmoSTR+"/"+TownSTR+"/"+DifficultySTR+"/"+Character_1+"/"+Character_2+"/"+Character_3+"/"+Character_4+"/"+Char1Health+"/"+Char2Health+"/"+Char3Health+"/"+Char4Health+"/"+KarmaSTR+"/"+PlayerName+"/"+Location+"/"+Water_Tablets+"/"+MedSTR)
+    WheelSTR = (repr(WheelSTR))
+    file.write(MoneySTR+"/"+FoodSTR+"/" +AmmoSTR+"/"+TownSTR+"/"+DifficultySTR+"/"+Character_1+"/"+Character_2+"/"+Character_3+"/"+Character_4+"/"+Char1Health+"/"+Char2Health+"/"+Char3Health+"/"+Char4Health+"/"+KarmaSTR+"/"+PlayerName+"/"+Location+"/"+Water_Tablets+"/"+MedSTR+"/"+WheelSTR)
     file.close
     clear()
     print("\nGame saved.")
@@ -1077,6 +1179,7 @@ def load():
   global Location
   global Water_Tablets
   global Medicine
+  global Wheels
   PlayerName = input("\nEnter name on save file\nName: ")
   txt = open(PlayerName + "save.txt","r").readlines()
   MoneySTR = (txt[0].split("/")[0])
@@ -1097,6 +1200,7 @@ def load():
   Location = (txt[0].split("/")[15])
   Water_Tablets = (txt[0].split("/")[16])
   MedSTR = (txt[0].split("/")[17])
+  WheelSTR = (txt[0].split("/")[18])
   Money = Money + int(MoneySTR)
   Food = Food + int(FoodSTR)
   Ammo = Ammo + int(AmmoSTR)
@@ -1104,6 +1208,7 @@ def load():
   Difficulty = Difficulty + int(DifficultySTR)
   Karma = Karma + int(KarmaSTR)
   Medicine = Medicine + int(MedSTR)
+  Wheels = Wheels + int(WheelSTR)
   Character_1 = str(Character_1)
   Character_2 = str(Character_2)
   print("\nLoaded Successfully")
