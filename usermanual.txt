@@ -3,13 +3,14 @@ Beginning
 -----------------------
 You will start off in the town of Hanover and make your way through eight towns on your quest to Oregon.
 The difficulty determines how hard your trip there will be (ie; The likelyhood of injury, death, sickness, natural disasters, and bandit raids).
-You should buy the bulk of your supply towards the earlier towns, because the more remote the shop is, the more expensive the goods will become. 
+You should buy the bulk of your supply towards the earlier towns, because the more remote the shop is, the more expensive the goods will become. Sawk Trail and Idaho are the most remote trader posts in the game. These outposts will buy goods from you at the same price they sell.
 The earlier you purchase water tablets (A one-time purchased) the better off you'll be.
 
 On the trail
 -------------------------
 Your actions on the trail affect your "Karma", which in turn affects the NPC's attitudes towards you. Shops will stop selling to you if your karma falls low enough.
 Don't let your food go empty for too long, or you'll starve. Always keep ammo on you to hunt food, lest you fall prey to unethical activities to eat on the trail.
+If you're running low on money, fellow travellers low on supplies would be grateful for some and may offer you money in exchange.
 
 Injury/Sickness/Death
 -------------------------
