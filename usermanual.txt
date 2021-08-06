@@ -11,6 +11,7 @@ On the trail
 Your actions on the trail affect your "Karma", which in turn affects the NPC's attitudes towards you. Shops will stop selling to you if your karma falls low enough.
 Don't let your food go empty for too long, or you'll starve. Always keep ammo on you to hunt food, lest you fall prey to unethical activities to eat on the trail.
 If you're running low on money, fellow travellers low on supplies would be grateful for some and may offer you money in exchange.
+You can adjust the rations your party consumes each day in the shop menu, where 4 food per day is the default. Lowering this value can be done when needed (to get through a difficult part of the game, for example) but is not recommended. The smaller your rations are, the higher chance you have of falling ill on the trail.
 
 Injury/Sickness/Death
 -------------------------
